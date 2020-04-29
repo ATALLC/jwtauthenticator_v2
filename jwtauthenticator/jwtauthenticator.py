@@ -57,7 +57,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
         elif auth_param_content:
             token = auth_param_content
         else:
-            return self.auth_failed(auth_url)
+            return self.auth_failed(auth_url, "failed if bool(auth_header_content) + bool(auth_cookie_content) + bool(auth_param_content) > 1: ")
 
         try:
             if secret:
@@ -65,9 +65,9 @@ class JSONWebTokenLoginHandler(BaseHandler):
             elif signing_certificate:
                 claims = self.verify_jwt_with_claims(token, signing_certificate, audience)
             else:
-                return self.auth_failed(auth_url)
+                return self.auth_failed(auth_url, "failed if secret elif signing_certificate")
         except jwt.exceptions.InvalidTokenError:
-            return self.auth_failed(auth_url)
+            return self.auth_failed(auth_url, "invalidTokenError")
 
         username = self.retrieve_username(claims, username_claim_field, extract_username=extract_username)
         user = await self.auth_to_user({'name': username})
@@ -75,11 +75,11 @@ class JSONWebTokenLoginHandler(BaseHandler):
 
         self.redirect(_url)
 
-    def auth_failed(self, redirect_url):
+    def auth_failed(self, redirect_url, reason):
         if redirect_url:
             self.redirect(redirect_url)
         else:
-            raise web.HTTPError(401)
+            raise web.HTTPError(401, reason=reason)
 
     @staticmethod
     def verify_jwt_with_claims(token, signing_certificate, audience):
