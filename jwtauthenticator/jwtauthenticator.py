@@ -67,7 +67,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
             else:
                 return self.auth_failed(auth_url, "failed if secret elif signing_certificate")
         except jwt.exceptions.InvalidTokenError:
-            return self.auth_failed(auth_url, "invalidTokenError")
+            return self.auth_failed(auth_url, "invalidTokenError:" + token)
 
         username = self.retrieve_username(claims, username_claim_field, extract_username=extract_username)
         user = await self.auth_to_user({'name': username})
