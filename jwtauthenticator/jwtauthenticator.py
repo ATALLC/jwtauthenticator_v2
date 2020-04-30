@@ -182,9 +182,24 @@ class JSONWebTokenAuthenticator(Authenticator):
                 (r'/logout', JSONWebTokenLogoutHandler)]
 
     @gen.coroutine
-    def authenticate(self, *args):
-        raise NotImplementedError()
+    def authenticate(self, handler, data=None):
+        username = yield identify_user(handler, data)
+        upstream_token = yield token_for_user(username)
+        return {
+            'name': username,
+            'auth_state': {
+                'upstream_token': upstream_token,
+            },
+        }
 
+    @gen.coroutine
+    def pre_spawn_start(self, user, spawner):
+        """Pass upstream_token to spawner via environment variable"""
+        auth_state = yield user.get_auth_state()
+        if not auth_state:
+            # auth_state not enabled
+            return
+        spawner.environment['UPSTREAM_TOKEN'] = auth_state['upstream_token']
 
 class JSONWebTokenLocalAuthenticator(JSONWebTokenAuthenticator, LocalAuthenticator):
     """
