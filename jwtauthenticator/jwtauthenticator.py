@@ -8,6 +8,8 @@ from tornado import (
     gen,
     web,
 )
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+
 from traitlets import (
     Bool,
     List,
@@ -107,7 +109,15 @@ class JSONWebTokenLoginHandler(BaseHandler):
 
 class JSONWebTokenLogoutHandler(LogoutHandler):
     async def render_logout_page(self):
-       self.redirect("/oauth/logout?redirect=" + self.authenticator.auth_url)
+       http_client = AsyncHTTPClient()
+       req = HTTPRequest("/oauth/logout?redirect=" + self.authenticator.auth_url,
+                         method="POST",
+                         headers=headers
+                         validate_cert=self.tls_verify
+                         body="")
+       resp = await http_client.fetch(req)
+
+       self.redirect(self.hub.server.base_url)
 
 class JSONWebTokenAuthenticator(Authenticator):
     """
@@ -180,26 +190,6 @@ class JSONWebTokenAuthenticator(Authenticator):
     def get_handlers(self, app):
         return [(r'/login', JSONWebTokenLoginHandler),
                 (r'/logout', JSONWebTokenLogoutHandler)]
-
-    @gen.coroutine
-    def authenticate(self, handler, data=None):
-        username = yield identify_user(handler, data)
-        upstream_token = yield token_for_user(username)
-        return {
-            'name': username,
-            'auth_state': {
-                'upstream_token': upstream_token,
-            },
-        }
-
-    @gen.coroutine
-    def pre_spawn_start(self, user, spawner):
-        """Pass upstream_token to spawner via environment variable"""
-        auth_state = yield user.get_auth_state()
-        if not auth_state:
-            # auth_state not enabled
-            return
-        spawner.environment['UPSTREAM_TOKEN'] = auth_state['upstream_token']
 
 class JSONWebTokenLocalAuthenticator(JSONWebTokenAuthenticator, LocalAuthenticator):
     """
