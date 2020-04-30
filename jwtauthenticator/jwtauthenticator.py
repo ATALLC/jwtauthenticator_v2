@@ -110,6 +110,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
 class JSONWebTokenLogoutHandler(LogoutHandler):
     async def render_logout_page(self):
        http_client = AsyncHTTPClient()
+       headers = {"Content-Type": "application/x-www-form-urlencoded"}
        req = HTTPRequest("/oauth/logout?redirect=" + self.authenticator.auth_url,
                          method="POST",
                          headers=headers,
