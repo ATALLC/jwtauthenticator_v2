@@ -114,7 +114,7 @@ class JSONWebTokenLogoutHandler(LogoutHandler):
        req = HTTPRequest("/oauth/logout?redirect=" + self.authenticator.auth_url,
                          method="POST",
                          headers=headers,
-                         validate_cert=self.tls_verify,
+                         validate_cert= False,
                          body="")
        resp = await http_client.fetch(req)
 
