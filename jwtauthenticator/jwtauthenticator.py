@@ -109,7 +109,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
 
 class JSONWebTokenLogoutHandler(LogoutHandler):
     async def render_logout_page(self):
-       self.redirect(self.authenticator.host_url + "/oauth/logout?redirect=" + self.authenticator.auth_url)
+       self.redirect("/oauth/logout?redirect=" + self.authenticator.auth_url)
 
 class JSONWebTokenAuthenticator(Authenticator):
     """
@@ -118,10 +118,6 @@ class JSONWebTokenAuthenticator(Authenticator):
     auth_url = Unicode(
         config=True,
         help="""URL for redirecting to in the case of invalid auth token""")
-
-    host_url = Unicode(
-        config=True,
-        help="""URL for host used when logging out""")
 
     retpath_param = Unicode(
         config=True,
