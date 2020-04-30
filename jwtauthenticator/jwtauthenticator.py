@@ -1,4 +1,5 @@
 from jupyterhub.handlers import BaseHandler
+from jupyterhub.handlers import LogoutHandler
 from jupyterhub.auth import Authenticator
 from jupyterhub.auth import LocalAuthenticator
 from jupyterhub.utils import url_path_join
@@ -57,7 +58,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
         elif auth_param_content:
             token = auth_param_content
         else:
-            return self.auth_failed(auth_url, "failed if bool(auth_header_content) + bool(auth_cookie_content) + bool(auth_param_content) > 1: ")
+            return self.auth_failed(auth_url)
 
         try:
             if secret:
@@ -65,9 +66,9 @@ class JSONWebTokenLoginHandler(BaseHandler):
             elif signing_certificate:
                 claims = self.verify_jwt_with_claims(token, signing_certificate, audience)
             else:
-                return self.auth_failed(auth_url, "failed if secret elif signing_certificate")
+                return self.auth_failed(auth_url)
         except jwt.exceptions.InvalidTokenError:
-            return self.auth_failed(auth_url, "invalidTokenError:" + token)
+            return self.auth_failed(auth_url)
 
         username = self.retrieve_username(claims, username_claim_field, extract_username=extract_username)
         user = await self.auth_to_user({'name': username})
@@ -75,7 +76,7 @@ class JSONWebTokenLoginHandler(BaseHandler):
 
         self.redirect(_url)
 
-    def auth_failed(self, redirect_url, reason):
+    def auth_failed(self, redirect_url):
         if redirect_url:
             self.redirect(redirect_url)
         else:
@@ -104,6 +105,9 @@ class JSONWebTokenLoginHandler(BaseHandler):
                 return username.split("@")[0]
         return username
 
+class JSONWebTokenLogoutHandler(LogoutHandler):
+    async def render_logout_page(self):
+       self.redirect("/oauth/logout?redirect=" + self.authenticator.auth_url)
 
 class JSONWebTokenAuthenticator(Authenticator):
     """
@@ -174,9 +178,8 @@ class JSONWebTokenAuthenticator(Authenticator):
     )
 
     def get_handlers(self, app):
-        return [
-            (r'/login', JSONWebTokenLoginHandler),
-        ]
+        return [(r'/login', JSONWebTokenLoginHandler),
+                (r'/logout', JSONWebTokenLogoutHandler)]
 
     @gen.coroutine
     def authenticate(self, *args):

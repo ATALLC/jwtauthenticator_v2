@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(
-    name='jupyterhub-jwtauthenticator-v2',
-    version='2.0.2',
-    description='JSONWebToken Authenticator for JupyterHub',
+    name='jupyterhub-jwtauthenticator-oauth-logout',
+    version='0.0.1',
+    description='JSONWebToken Authenticator for JupyterHub with override for LogoutHandler endpoint',
     url='https://github.com/izihawa/jwtauthenticator_v2',
-    author='ppodolsky',
-    author_email='ppodolsky@me.com',
+    author='Dan Quintero',
+    author_email='dquintero@ata-llc.com',
     license='Apache 2.0',
     packages=['jwtauthenticator'],
     install_requires=[
